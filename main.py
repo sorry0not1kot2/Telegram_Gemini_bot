@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 import google.generativeai as genai
@@ -53,7 +52,7 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Запуск бота...")
-    await application.run_polling()
+    await application.run_polling(drop_pending_updates=True) 
 
 if __name__ == '__main__':
     asyncio.run(main())
