@@ -16,9 +16,13 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
+# Удаление активного webhook
+asyncio.run(bot.delete_webhook())
+
 # Получение имени пользователя бота
 bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
+logger.info(f"Bot username: {bot_username}")
 
 # Хранение данных по разговорам
 conversation_data = {}
@@ -39,19 +43,22 @@ async def get_gemini_response(query):
 
 @bot.message_handler(commands=['start'])
 async def handle_start_command(message):
+    logger.info(f"Received /start command from {message.chat.id}")
     await bot.send_message(message.chat.id, f"Привет! Я бот, использующий модель Gemini от Google. Обращайтесь ко мне по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
 
 @bot.message_handler(commands=['clear'])
 async def handle_clear_command(message):
+    logger.info(f"Received /clear command from {message.chat.id}")
     conversation_data.pop(message.chat.id, None)
     await bot.send_message(message.chat.id, "Данные по разговорам очищены.")
 
 @bot.message_handler(func=lambda message: message.chat.type in ['group', 'supergroup'] and (bot_username in message.text or (message.reply_to_message and message.reply_to_message.from_user.username == bot_username)))
 async def handle_message(message):
+    logger.info(f"Received message: {message.text} from {message.chat.id}")
     query = message.text.replace(f"@{bot_username}", "").strip()
     
     if query:
-        logger.info(f"Получен запрос: {query}")
+        logger.info(f"Processing query: {query}")
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
         
         response = await get_gemini_response(query)
