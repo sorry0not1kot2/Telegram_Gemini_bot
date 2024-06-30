@@ -3,3 +3,4 @@ google-generativeai
 curl_cffi
 nest_asyncio
 pyTelegramBotAPI
+aiohttp
