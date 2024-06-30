@@ -20,30 +20,16 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 async def get_gemini_response(query):
-    logger.info(f"Sending query to Gemini: {query}")
-    try:
-        response = model.generate_content(prompt=query)
-        logger.info(f"Received response from Gemini: {response['content']}")
-        return response['content']
-    except Exception as e:
-        logger.error(f"Error getting response from Gemini: {str(e)}")
-        return f"Произошла ошибка при обращении к Gemini: {str(e)}"
+    # ... (без изменений)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.message.text.strip()
-    if query:
-        logger.info(f"Processing query: {query}")
-        try:
-            response = await get_gemini_response(query)
-            await update.message.reply_text(response)  # Отправляем ответ напрямую
-        except Exception as e:
-            await update.message.reply_text(f"Произошла ошибка: {str(e)}")
+    # ... (без изменений)
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+    # ... (без изменений)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Я бот, использующий модель Gemini от Google.")
+    # ... (без изменений)
 
 async def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -56,4 +42,4 @@ async def main():
     await application.run_polling()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(main())  # Без изменений
