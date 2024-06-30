@@ -19,6 +19,9 @@ bot_username = bot_info.username
 # Хранение данных по разговорам
 conversation_data = {}
 
+# Установка API ключа для Gemini
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+
 # Установка модели Gemini
 model = genai.GenerativeModel('gemini-1.5-flash')
 
