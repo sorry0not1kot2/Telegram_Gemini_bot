@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 import logging
 import os
@@ -10,7 +9,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Настройка бота
-bot = AsyncTeleBot(os.getenv('TELEGRAM_BOT_TOKEN'))
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+bot = AsyncTeleBot(BOT_TOKEN)
 
 # Получение имени пользователя бота
 bot_info = asyncio.run(bot.get_me())
