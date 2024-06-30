@@ -25,9 +25,9 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content([query])
-        logger.info(f"Received response from Gemini: {response['content']}")
-        return response['content']
+        response = model.generate_content(text=query)
+        logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
+        return response.candidates[0].content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
