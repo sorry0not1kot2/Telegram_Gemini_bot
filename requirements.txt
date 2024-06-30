@@ -2,6 +2,5 @@ python-telegram-bot==20.0
 google-generativeai
 curl_cffi
 nest_asyncio
-aiogram==3.10.0
+aiogram==3.20.0  # Замените на последнюю версию aiogram
 aiohttp
-
