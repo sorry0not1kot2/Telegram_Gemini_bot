@@ -1,12 +1,11 @@
-import nest_asyncio
-nest_asyncio.apply()
-
-import asyncio
 import logging
 import os
 import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
+import nest_asyncio
+
+nest_asyncio.apply()
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +24,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content(prompt=query)
+        response = model.generate_content([query])
         logger.info(f"Received response from Gemini: {response['content']}")
         return response['content']
     except Exception as e:
