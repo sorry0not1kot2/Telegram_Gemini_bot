@@ -2,11 +2,8 @@ import asyncio
 import logging
 import os
 import google.generativeai as genai
-import nest_asyncio
-from aiogram import Bot, Dispatcher, executor, types
-
-# Применение nest_asyncio для повторного использования event loop
-nest_asyncio.apply()
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -14,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+bot = Bot(BOT_TOKEN)
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
@@ -33,27 +29,29 @@ async def get_gemini_response(query):
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
 
-@dp.message_handler(commands=['start'])
-async def handle_start_command(message: types.Message):
-    logger.info(f"Received /start command from {message.chat.id}")
-    await message.reply("Привет! Я бот, использующий модель Gemini от Google.")
-
-@dp.message_handler()
-async def handle_message(message: types.Message):
-    logger.info(f"Received message: {message.text} from {message.chat.id}")
-    query = message.text.strip()
-    
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.message.text.strip()
     if query:
         logger.info(f"Processing query: {query}")
-        await message.reply("Обрабатываю ваш запрос...")
-        
         response = await get_gemini_response(query)
-        
-        await message.reply(response)
-        logger.info("Ответ отправлен")
-    else:
-        await message.reply("Пожалуйста, введите сообщение.")
+        await update.message.reply_text(response)
 
-# Запуск бота
+async def handle_start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Привет! Я бот, использующий модель Gemini от Google. Обращайтесь ко мне по @username или отвечайте на мои сообщения, чтобы получить ответ.")
+
+async def handle_clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Очищаем данные по разговорам (если есть)
+    await update.message.reply_text("Данные по разговорам очищены.")
+
+async def main():
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler('start', handle_start_command))
+    application.add_handler(CommandHandler('clear', handle_clear_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    logger.info("Запуск бота...")
+    await application.run_polling()
+
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
