@@ -4,4 +4,3 @@ curl_cffi
 nest_asyncio
 pyTelegramBotAPI
 aiohttp
-
