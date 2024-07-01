@@ -29,7 +29,7 @@ async def get_bot_username():
 # Функция экранирования специальных символов MarkdownV2
 def escape_markdown_v2(text):
     # Список специальных символов, которые нужно экранировать в MarkdownV2
-    escape_chars = '_*~`>#+-=|{}.!\\('
+    escape_chars = '_*~`>#+-=|{}.!\\)('
     # Экранирование символов
     return ''.join(['\\' + char if char in escape_chars else char for char in text])
 
