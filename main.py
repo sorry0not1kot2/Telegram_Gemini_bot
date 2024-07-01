@@ -22,6 +22,11 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 # Установка модели Gemini
 model = genai.GenerativeModel('gemini-1.5-flash')
 
+# Функция для экранирования специальных символов MarkdownV2
+def escape_md(text):
+    escape_chars = '_*~`>#+-=|{}.!'
+    return ''.join('\\' + char if char in escape_chars else char for char in text)
+
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
@@ -31,7 +36,8 @@ async def get_gemini_response(query):
     try:
         response = model.generate_content(query)
         logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
-        return response.candidates[0].content.parts[0].text
+        # Экранируем специальные символы для MarkdownV2
+        return escape_md(response.candidates[0].content.parts[0].text)
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
