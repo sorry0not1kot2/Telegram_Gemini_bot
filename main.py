@@ -39,7 +39,7 @@ async def get_gemini_response(query):
         response = model.generate_content(query)
         response_text = response.candidates[0].content.parts[0].text
         # Замена трех одинарных кавычек на три обратных апострофа
-        response_text = response_text.replace("'''", "```")
+        # response_text = response_text.replace("'''", "```")
         # Экранирование специальных символов для MarkdownV2
         escaped_response = escape_markdown_v2(response_text)
         logger.info(f"Received response from Gemini: {escaped_response}")
