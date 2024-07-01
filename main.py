@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
@@ -15,9 +16,22 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = Bot(BOT_TOKEN)
 
+# Установка API ключа для Gemini
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+
+# Установка модели Gemini
+model = genai.GenerativeModel('gemini-1.5-flash')
+
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
+
+# Функция экранирования специальных символов MarkdownV2
+def escape_markdown_v2(text):
+    # Список специальных символов, которые нужно экранировать в MarkdownV2
+    escape_chars = '_*~`>#+-=|{}.!\\'
+    # Экранирование символов
+    return ''.join(['\\' + char if char in escape_chars else char for char in text])
 
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
@@ -26,10 +40,10 @@ async def get_gemini_response(query):
         response_text = response.candidates[0].content.parts[0].text
         # Замена трех одинарных кавычек на три обратных апострофа
         response_text = response_text.replace("'''", "```")
-        # Замена двойных звездочек на одинарные для жирного текста
-        response_text = response_text.replace("**", "*")
-        logger.info(f"Received response from Gemini: {response_text}")
-        return response_text
+        # Экранирование специальных символов для MarkdownV2
+        escaped_response = escape_markdown_v2(response_text)
+        logger.info(f"Received response from Gemini: {escaped_response}")
+        return escaped_response
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
@@ -52,7 +66,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response)
+        # Отправка сообщения с форматированием MarkdownV2
+        await message.reply_text(response, parse_mode='MarkdownV2')
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
