@@ -39,7 +39,7 @@ def format_bold(text):
 
 def replace_code_block(text):
     # Функция для замены трех одинарных кавычек на три обратных апострофа
-    return text.replace("'''", "
+    return text.replace("'''", "```") 
 
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
