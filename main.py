@@ -22,11 +22,6 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 # Установка модели Gemini
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Функция для экранирования специальных символов MarkdownV2
-def escape_md(text):
-    escape_chars = '_*~`>#+-=|{}.!'
-    return ''.join('\\' + char if char in escape_chars else char for char in text)
-
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
@@ -36,8 +31,7 @@ async def get_gemini_response(query):
     try:
         response = model.generate_content(query)
         logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
-        # Экранируем специальные символы для MarkdownV2
-        return escape_md(response.candidates[0].content.parts[0].text)
+        return response.candidates[0].content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
@@ -60,8 +54,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        # Отправляем ответ с форматированием MarkdownV2
-        await message.reply_text(response, parse_mode='MarkdownV2')
+        await message.reply_text(response)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
@@ -84,7 +77,7 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Запуск бота...")
-    await application.run_polling(drop_pending_updates=True)
+    await application.run_polling(drop_pending_updates=True) 
 
 if __name__ == '__main__':
     asyncio.run(main())
