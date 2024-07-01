@@ -64,7 +64,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response, parse_mode='MARKDOWN_V2')
+        await message.reply_text(response, parse_mode='MarkdownV2')
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
