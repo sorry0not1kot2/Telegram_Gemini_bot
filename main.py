@@ -30,7 +30,7 @@ async def get_bot_username():
 def format_markdown_v2_links(text):
     # Функция для форматирования ссылок по правилам MarkdownV2
     # Экранирование специальных символов в URL
-    pattern = r'[([^]]+)](([^)]+))'
+    pattern = r'\[([^\]]+)\]\(([^)]+)\)'
     return re.sub(pattern, lambda x: f"{x.group(1)}.replace(')', '\\)'))", text)
 
 def format_bold(text):
