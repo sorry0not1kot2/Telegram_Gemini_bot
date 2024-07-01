@@ -30,9 +30,8 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = model.generate_content(query)
-        response_text = response.candidates[0].content.parts[0].text
-        logger.info(f"Received response from Gemini: {response_text}")
-        return response_text
+        logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
+        return response.candidates[0].content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
@@ -43,16 +42,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
 
     if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
+        # Если сообщение является ответом на сообщение бота
         logger.info(f"Processing reply to bot: {query}")
     elif f"@{bot_username}" in query:
+        # Если сообщение содержит упоминание бота
         logger.info(f"Processing mention of bot: {query}")
         query = query.replace(f"@{bot_username}", "").strip()
     else:
+        # Игнорируем сообщения, не содержащие упоминание бота или не являющиеся ответом на сообщение бота
         return
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response)
+        # Отправляем ответ с форматированием MarkdownV2
+        await message.reply_text(response, parse_mode='MarkdownV2')
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
@@ -75,7 +78,7 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Запуск бота...")
-    await application.run_polling(drop_pending_updates=True) 
+    await application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     asyncio.run(main())
