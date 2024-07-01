@@ -30,8 +30,8 @@ async def get_bot_username():
 def format_markdown_v2_links(text):
     # Функция для форматирования ссылок по правилам MarkdownV2
     # Экранирование специальных символов в URL
-    pattern = r'\[([^\]]+)\]\(([^)]+)\)'
-    return re.sub(pattern, lambda x: f"{x.group(1)}.replace(')', '\\)')})", text)
+    pattern = r'[([^]]+)](([^)]+))'
+    return re.sub(pattern, lambda x: f"{x.group(1)}.replace(')', '\\)')}", text)
 
 def format_bold(text):
     # Функция для преобразования текста в жирный
@@ -39,7 +39,7 @@ def format_bold(text):
 
 def replace_code_block(text):
     # Функция для замены трех одинарных кавычек на три обратных апострофа
-    return text.replace("'''", "```")
+    return text.replace("'''", "
 
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
