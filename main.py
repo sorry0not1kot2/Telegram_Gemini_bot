@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import re
 import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
@@ -26,12 +27,33 @@ async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
 
+def format_markdown_v2_links(text):
+    # Функция для форматирования ссылок по правилам MarkdownV2
+    # Экранирование специальных символов в URL
+    pattern = r'\[([^\]]+)\]\(([^)]+)\)'
+    return re.sub(pattern, lambda x: f"{x.group(1)}.replace(')', '\\)')})", text)
+
+def format_bold(text):
+    # Функция для преобразования текста в жирный
+    return text.replace('**', '*')
+
+def replace_code_block(text):
+    # Функция для замены трех одинарных кавычек на три обратных апострофа
+    return text.replace("'''", "```")
+
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = model.generate_content(query)
-        logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
-        return response.candidates[0].content.parts[0].text
+        response_text = response.candidates[0].content.parts[0].text
+        # Форматирование ссылок по правилам MarkdownV2
+        response_text = format_markdown_v2_links(response_text)
+        # Преобразование текста в жирный
+        response_text = format_bold(response_text)
+        # Замена трех одинарных кавычек на три обратных апострофа
+        response_text = replace_code_block(response_text)
+        logger.info(f"Received response from Gemini: {response_text}")
+        return response_text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
