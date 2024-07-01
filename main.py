@@ -28,7 +28,9 @@ async def get_bot_username():
 
 # Функция экранирования специальных символов MarkdownV2
 def escape_markdown_v2(text):
-    escape_chars = '_*~`>#+-=|{}.!'
+    # Список специальных символов, которые нужно экранировать в MarkdownV2
+    escape_chars = '_*~`>#+-=|{}.!\\'
+    # Экранирование символов
     return ''.join(['\\' + char if char in escape_chars else char for char in text])
 
 async def get_gemini_response(query):
@@ -64,6 +66,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
+        # Отправка сообщения с форматированием MarkdownV2
         await message.reply_text(response, parse_mode='MarkdownV2')
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
