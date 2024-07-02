@@ -3,7 +3,7 @@ import logging
 import os
 import google.generativeai as genai
 from telegram import Bot, Update
-from telegram.constants import ParseMode  # Изменено импортирование
+from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
 
@@ -21,7 +21,7 @@ bot = Bot(BOT_TOKEN)
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Установка модели Gemini
-model = genai.GenerativeModel("gemini-1.5-flash")  # Используйте gemini-1.5-flash
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 async def get_bot_username():
     bot_info = await bot.get_me()
@@ -31,13 +31,13 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = await model.generate_content(
-            prompt=query,  # Исправлено на prompt
-            temperature=0.2,  # Adjust for creativity
-            top_p=0.95,  # Adjust for diversity
-            top_k=40,  # Adjust for diversity
-            max_output_tokens=4096,  # Adjust for length
+            prompt=query,
+            temperature=0.2,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=4096,
         )
-        logger.info(f"Received response from Gemini: {response.content.parts[0].text}")  # Исправлено на text
+        logger.info(f"Received response from Gemini: {response.content.parts[0].text}")
         return response.content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
@@ -49,19 +49,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
 
     if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
-        # Если сообщение является ответом на сообщение бота
         logger.info(f"Processing reply to bot: {query}")
     elif f"@{bot_username}" in query:
-        # Если сообщение содержит упоминание бота
         logger.info(f"Processing mention of bot: {query}")
         query = query.replace(f"@{bot_username}", "").strip()
     else:
-        # Игнорируем сообщения, не содержащие упоминание бота или не являющиеся ответом на сообщение бота
         return
 
     try:
         response = await get_gemini_response(query)
-        # Отправляем ответ с использованием ParseMode.MARKDOWN
         await message.reply_text(response, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
@@ -85,7 +81,7 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Запуск бота...")
-    await application.run_polling(drop_pending_updates=True) 
+    await application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     asyncio.run(main())
