@@ -48,8 +48,12 @@ async def get_gemini_response(query):
                 HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
             }
         )
-        logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
-        return response.candidates[0].content.parts[0].text
+        if response.candidates:
+            logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
+            return response.candidates[0].content.parts[0].text
+        else:
+            logger.error("No candidates received from Gemini")
+            return "Не удалось получить ответ от Gemini."
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
