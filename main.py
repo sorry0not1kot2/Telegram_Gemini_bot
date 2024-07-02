@@ -9,9 +9,6 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 nest_asyncio.apply()
 
-# Загрузка переменных окружения из файла .env
-load_dotenv()
-
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
