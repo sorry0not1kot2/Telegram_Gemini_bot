@@ -1,8 +1,6 @@
 python-telegram-bot==20.0
 google-generativeai
-curl_cffi
-nest_asyncio
-pyTelegramBotAPI
+nest-asyncio
 aiohttp
 
 
