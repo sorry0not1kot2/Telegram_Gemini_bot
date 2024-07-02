@@ -34,9 +34,16 @@ def markdown_to_telegram(text):
     """Преобразует Markdown в разметку Telegram, экранируя HTML."""
     text = re.sub(r'__(.*?)__', r'<b>\1</b>', text)
     text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)
-    text = re.sub(r'`(.*?)`', r'<code>{}</code>'.format(html.escape(text)), text)
+    text = re.sub(r'`(.*?)`', r'<pre>{}</pre>'.format(html.escape(text)), text) # Используем <pre>
     text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text)
     return text
+
+# ... (остальной код без изменений)
+Use code with caution.
+Python
+После этой модификации Telegram должен корректно обрабатывать блоки кода от Gemini, и ошибка "Can't parse entities" должна исчезнуть.
+Type something
+
 
 async def get_bot_username():
     bot_info = await bot.get_me()
