@@ -6,7 +6,7 @@ from telegram import Bot, Update
 from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
-import markdown
+import markdown2
 
 nest_asyncio.apply()
 
@@ -31,13 +31,13 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content(query)
+        response = model.generate_content([query])
         # Извлечение текста из ответа
-        content = response.candidates[0].output
+        content = response.candidates[0].text
         logger.info(f"Received response from Gemini: {content}")
-        # Парсинг Markdown в HTML
-        html_content = markdown.markdown(content)
-        return html_content
+        # Парсинг Markdown в Markdown2 (если это необходимо)
+        markdown_content = markdown2.markdown(content)
+        return markdown_content
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
@@ -57,7 +57,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response, parse_mode=ParseMode.HTML)
+        await message.reply_text(response, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
