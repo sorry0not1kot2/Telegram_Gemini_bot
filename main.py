@@ -33,7 +33,7 @@ async def get_gemini_response(query):
     try:
         response = model.generate_content(query)
         # Извлечение текста из ответа
-        content = response.candidates[0].text
+        content = response.candidates[0].output
         logger.info(f"Received response from Gemini: {content}")
         # Парсинг Markdown в HTML
         html_content = markdown.markdown(content)
