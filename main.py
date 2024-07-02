@@ -3,12 +3,15 @@ import logging
 import os
 import google.generativeai as genai
 from telegram import Bot, Update
-from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
-import markdown2
+from dotenv import load_dotenv
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 nest_asyncio.apply()
+
+# Загрузка переменных окружения из файла .env
+load_dotenv()
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +25,15 @@ bot = Bot(BOT_TOKEN)
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Установка модели Gemini
-model = genai.GenerativeModel("gemini-1.5-flash")
+generation_config = {
+    "temperature": 0.5,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 4096,
+    "response_mime_type": "text/plain",
+}
+
+model = genai.GenerativeModel(model_name='gemini-1.5-flash')
 
 async def get_bot_username():
     bot_info = await bot.get_me()
@@ -31,13 +42,18 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content(messages=[{"role": "user", "content": query}])
-        # Извлечение текста из ответа
-        content = response.messages[0].content
-        logger.info(f"Received response from Gemini: {content}")
-        # Парсинг Markdown в HTML с использованием markdown2
-        html_content = markdown2.markdown(content)
-        return html_content
+        response = model.generate_content(
+            query,
+            generation_config=generation_config,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+            }
+        )
+        logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
+        return response.candidates[0].content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
@@ -48,16 +64,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
 
     if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
+        # Если сообщение является ответом на сообщение бота
         logger.info(f"Processing reply to bot: {query}")
     elif f"@{bot_username}" in query:
+        # Если сообщение содержит упоминание бота
         logger.info(f"Processing mention of bot: {query}")
         query = query.replace(f"@{bot_username}", "").strip()
     else:
+        # Игнорируем сообщения, не содержащие упоминание бота или не являющиеся ответом на сообщение бота
         return
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response, parse_mode=ParseMode.MARKDOWN)
+        await message.reply_text(response)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
@@ -80,7 +99,7 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Запуск бота...")
-    await application.run_polling(drop_pending_updates=True)
+    await application.run_polling(drop_pending_updates=True) 
 
 if __name__ == '__main__':
     asyncio.run(main())
