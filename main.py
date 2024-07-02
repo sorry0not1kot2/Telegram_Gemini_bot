@@ -31,11 +31,11 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = await model.generate_content(
-            prompt=query,  # Изменено на prompt
+            text=query,  # Изменено на prompt
             temperature=0.2,  # Adjust for creativity
             top_p=0.95,  # Adjust for diversity
             top_k=40,  # Adjust for diversity
-            max_output_tokens=512,  # Adjust for length
+            max_output_tokens=4096,  # Adjust for length
         )
         logger.info(f"Received response from Gemini: {response.content.parts[0].text}")
         return response.content.parts[0].text
