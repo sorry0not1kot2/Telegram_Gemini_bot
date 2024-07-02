@@ -24,12 +24,16 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 # Установка модели Gemini
 model = genai.GenerativeModel('gemini-1.5-flash')
 
+# Максимальная длина сообщения Telegram
+MAX_MESSAGE_LENGTH = 4096
+
+# Функция для преобразования Markdown в разметку Telegram
 def markdown_to_telegram(text):
     """Преобразует Markdown в разметку Telegram, экранируя HTML."""
-    text = re.sub(r'__(.*?)__', r'<b>\1</b>', text) 
-    text = re.sub(r'_(.*?)_', r'<i>\1</i>', text) 
-    text = re.sub(r'`(.*?)`', r'<code>{}</code>'.format(html.escape(text)), text)  # Экранируем код
-    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text) 
+    text = re.sub(r'__(.*?)__', r'<b>\1</b>', text)
+    text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)
+    text = re.sub(r'`(.*?)`', r'<code>{}</code>'.format(html.escape(text)), text)
+    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text)
     return text
 
 async def get_bot_username():
@@ -39,14 +43,24 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content(query)
+        response = model.generate_content(query, max_tokens=500)  # Ограничиваем ответ Gemini
         raw_response = response.candidates[0].content.parts[0].text
         logger.info(f"Received response from Gemini: {raw_response}")
-        formatted_response = markdown_to_telegram(raw_response) 
+        formatted_response = markdown_to_telegram(raw_response)
         return formatted_response
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
+
+async def split_message(message):
+    """Разбивает сообщение на части, если оно превышает максимальную длину."""
+    parts = []
+    if len(message) > MAX_MESSAGE_LENGTH:
+        for i in range(0, len(message), MAX_MESSAGE_LENGTH):
+            parts.append(message[i:i + MAX_MESSAGE_LENGTH])
+    else:
+        parts.append(message)
+    return parts
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
@@ -54,19 +68,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
 
     if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
-        # Если сообщение является ответом на сообщение бота
         logger.info(f"Processing reply to bot: {query}")
     elif f"@{bot_username}" in query:
-        # Если сообщение содержит упоминание бота
         logger.info(f"Processing mention of bot: {query}")
         query = query.replace(f"@{bot_username}", "").strip()
     else:
-        # Игнорируем сообщения
         return
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response, parse_mode='HTML')  # Отправляем с HTML разметкой
+        message_parts = await split_message(response)  # Разбиваем ответ на части
+        for part in message_parts:
+            await message.reply_text(part, parse_mode='HTML')
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
@@ -75,7 +88,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
-    await context.bot.send_message(chat_id=update.effective_chat.id, 
+    await context.bot.send_message(chat_id=update.effective_chat.id,
                                   text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} "
                                        f"или отвечайте на мои сообщения, чтобы получить ответ.")
 
