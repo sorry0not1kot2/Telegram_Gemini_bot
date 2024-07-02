@@ -38,13 +38,6 @@ def markdown_to_telegram(text):
     text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text)
     return text
 
-# ... (остальной код без изменений)
-Use code with caution.
-Python
-После этой модификации Telegram должен корректно обрабатывать блоки кода от Gemini, и ошибка "Can't parse entities" должна исчезнуть.
-Type something
-
-
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
