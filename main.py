@@ -58,8 +58,8 @@ async def split_message(message):
     return parts
 
 
-def escape_markdown_v1(text):
-    """Экранирует специальные символы Markdown V1."""
+def escape_markdown_v2(text):
+    """Экранирует специальные символы Markdown V2."""
     escape_chars = r'_*[]()~`>#+-=|{}.!'
     for char in escape_chars:
         text = text.replace(char, f'\\{char}')
