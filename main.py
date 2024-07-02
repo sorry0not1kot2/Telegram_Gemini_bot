@@ -30,13 +30,7 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = await model.generate_content(
-            prompt=query,  # Используем аргумент prompt
-            temperature=0.2,
-            top_p=0.95,
-            top_k=40,
-            max_output_tokens=4096,
-        )
+        response = model.generate_content(query)  # Используем метод без дополнительных аргументов
         logger.info(f"Received response from Gemini: {response.content.parts[0].text}")
         return response.content.parts[0].text
     except Exception as e:
