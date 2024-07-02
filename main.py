@@ -41,7 +41,7 @@ def markdown_to_telegram(text):
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
-
+    
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
