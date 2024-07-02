@@ -31,13 +31,13 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = await model.generate_content(
-            text=query,  # Изменено на prompt
+            prompt=query,  # Исправлено на prompt
             temperature=0.2,  # Adjust for creativity
             top_p=0.95,  # Adjust for diversity
             top_k=40,  # Adjust for diversity
             max_output_tokens=4096,  # Adjust for length
         )
-        logger.info(f"Received response from Gemini: {response.content.parts[0].text}")
+        logger.info(f"Received response from Gemini: {response.content.parts[0].text}")  # Исправлено на text
         return response.content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
