@@ -78,6 +78,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
+
+        # Экранируем символ '-'
+        response = response.replace('-', '\\-')
+
         message_parts = await split_message(response)
         for part in message_parts:
             await message.reply_text(part, parse_mode='MarkdownV2')
