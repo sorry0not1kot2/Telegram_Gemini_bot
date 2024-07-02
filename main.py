@@ -57,10 +57,11 @@ async def split_message(message):
         parts.append(current_part.strip())
     return parts
 
-def escape_markdown_v2(text):
-    """Экранирует специальные символы Markdown V2 внутри кода."""
-    text = re.sub(r'([_*\[\]()~`>#+-=|{}.!])', r'\\\1', text)
-    return text
+# Функция escape_markdown_v2() закомментирована
+# def escape_markdown_v2(text):
+#     """Экранирует специальные символы Markdown V2 внутри кода."""
+#     text = re.sub(r'([_*\[\]()~`>#+-=|{}.!])', r'\\\1', text)
+#     return text
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
@@ -78,13 +79,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = await get_gemini_response(query)
 
-        # Экранируем спецсимволы только внутри блоков кода
-        response = re.sub(r'```(.*?)```',
-                          lambda m: f"```{escape_markdown_v2(m.group(1))}```",
-                          response, flags=re.DOTALL)
-        response = re.sub(r'`(.*?)`',
-                          lambda m: f"`{escape_markdown_v2(m.group(1))}`",
-                          response)
+        # Экранирование спецсимволов закомментировано
+        # response = re.sub(r'```(.*?)```',
+        #                   lambda m: f"```{escape_markdown_v2(m.group(1))}```",
+        #                   response, flags=re.DOTALL)
+        # response = re.sub(r'`(.*?)`',
+        #                   lambda m: f"`{escape_markdown_v2(m.group(1))}`",
+        #                   response)
 
         message_parts = await split_message(response)
         for part in message_parts:
