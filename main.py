@@ -31,13 +31,13 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content([query])
+        response = model.generate_content(messages=[{"role": "user", "content": query}])
         # Извлечение текста из ответа
-        content = response.candidates[0].text
+        content = response.messages[0].content
         logger.info(f"Received response from Gemini: {content}")
-        # Парсинг Markdown в Markdown2 (если это необходимо)
-        markdown_content = markdown2.markdown(content)
-        return markdown_content
+        # Парсинг Markdown в HTML с использованием markdown2
+        html_content = markdown2.markdown(content)
+        return html_content
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
