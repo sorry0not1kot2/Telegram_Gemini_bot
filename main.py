@@ -34,7 +34,7 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     prompt = f"""
     Ты - помощник, отвечающий на вопросы в Telegram. 
-    Отформатируй ответ в соответствии с синтаксисом Markdown V2 для Telegram.
+    Отформатируй ответ в соответствии с синтаксисом  HTML для Telegram.
     
     Вопрос: {query}
     """
