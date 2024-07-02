@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import re
-import html
 import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = Bot(BOT_TOKEN)  # <-- Исправлено: удален лишний символ '
+bot = Bot(BOT_TOKEN)
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
@@ -27,40 +26,23 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 # Максимальная длина сообщения Telegram
 MAX_MESSAGE_LENGTH = 4096
 
-# Функция для преобразования Markdown в разметку Telegram
-def markdown_to_telegram(text):
-    """Преобразует Markdown в разметку Telegram, экранируя HTML 
-       и обрабатывая вложенные блоки <pre>.
-    """
-    text = re.sub(r'__(.*?)__', r'<b>\1</b>', text)
-    text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)
-    
-    # Обрабатываем блоки <pre>
-    text = re.sub(r'`(.*?)`', 
-                  lambda match: '<pre>{}</pre>'.format(html.escape(match.group(1)).replace('<pre>', '&lt;pre&gt;').replace('</pre>', '&lt;/pre&gt;')), 
-                  text)
-    
-    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text)
-    return text
-
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
-    
+
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = model.generate_content(query)
         raw_response = response.candidates[0].content.parts[0].text
         logger.info(f"Received response from Gemini: {raw_response}")
-        formatted_response = markdown_to_telegram(raw_response)
-        return formatted_response
+        return raw_response
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
 
 async def split_message(message):
-    """Разбивает сообщение на части, не превышающие максимальную длину, 
+    """Разбивает сообщение на части, не превышающие максимальную длину,
        стараясь не разбивать слова.
     """
     parts = []
@@ -74,6 +56,14 @@ async def split_message(message):
     if current_part:
         parts.append(current_part.strip())
     return parts
+
+
+def escape_markdown_v1(text):
+    """Экранирует специальные символы Markdown V1."""
+    escape_chars = r'_*[]()~`>#+-=|{}.!'
+    for char in escape_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
@@ -90,10 +80,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        message_parts = await split_message(response)  # Разбиваем после форматирования
+        escaped_response = escape_markdown_v1(response)  # Экранируем спецсимволы
+        message_parts = await split_message(escaped_response)
         for part in message_parts:
-            await message.reply_text(part, parse_mode='HTML')
-        await message.reply_text("Конец ответа. Что-то ещё? ")
+            await message.reply_text(part, parse_mode='MarkdownV1')
+        await message.reply_text("Конец ответа. Что-то ещё? ", parse_mode='MarkdownV1')
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
