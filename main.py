@@ -2,7 +2,8 @@ import asyncio
 import logging
 import os
 import google.generativeai as genai
-from telegram import Bot, Update, ParseMode
+from telegram import Bot, Update
+from telegram.constants import ParseMode 
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
 
