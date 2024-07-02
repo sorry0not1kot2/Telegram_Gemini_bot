@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import re
+import html
 import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
@@ -23,13 +24,12 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 # Установка модели Gemini
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Функция для преобразования Markdown в разметку Telegram
 def markdown_to_telegram(text):
-    """Преобразует Markdown в разметку Telegram."""
-    text = re.sub(r'__(.*?)__', r'<b>\1</b>', text)  # Жирный
-    text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)  # Курсив
-    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text)  # Код
-    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text)  # Ссылки
+    """Преобразует Markdown в разметку Telegram, экранируя HTML."""
+    text = re.sub(r'__(.*?)__', r'<b>\1</b>', text) 
+    text = re.sub(r'_(.*?)_', r'<i>\1</i>', text) 
+    text = re.sub(r'`(.*?)`', r'<code>{}</code>'.format(html.escape(text)), text)  # Экранируем код
+    text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text) 
     return text
 
 async def get_bot_username():
