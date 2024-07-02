@@ -31,8 +31,10 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = model.generate_content(query)
-        logger.info(f"Received response from Gemini: {response.candidates[0].content}")
-        return response.candidates[0].content
+        # Обработка ответа от Gemini
+        content = response.candidates[0].content
+        logger.info(f"Received response from Gemini: {content}")
+        return content
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
