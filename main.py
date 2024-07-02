@@ -3,7 +3,7 @@ import logging
 import os
 import google.generativeai as genai
 from telegram import Bot, Update
-from telegram.constants import ParseMode 
+from telegram.constants import ParseMode  # Изменено импортирование
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
 
@@ -21,7 +21,7 @@ bot = Bot(BOT_TOKEN)
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Установка модели Gemini
-model = genai.GenerativeModel("gemini-1.5-flesh")
+model = genai.GenerativeModel("gemini-1.5-flash")  # Используйте gemini-1.5-flash
 
 async def get_bot_username():
     bot_info = await bot.get_me()
@@ -30,15 +30,15 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = await model.generate_text(
+        response = await model.generate_content(
             text=query,
             temperature=0.2,  # Adjust for creativity
             top_p=0.95,  # Adjust for diversity
             top_k=40,  # Adjust for diversity
-            max_output_tokens=4096,  # Adjust for length
+            max_output_tokens=512,  # Adjust for length
         )
-        logger.info(f"Received response from Gemini: {response.text}")
-        return response.text
+        logger.info(f"Received response from Gemini: {response.content.parts[0].text}")
+        return response.content.parts[0].text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
