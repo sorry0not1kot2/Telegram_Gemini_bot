@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = Bot(BOT_TOKEN')
+bot = Bot(BOT_TOKEN)  # <-- Исправлено: удален лишний символ '
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
@@ -26,6 +26,8 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Максимальная длина сообщения Telegram
 MAX_MESSAGE_LENGTH = 4096
+
+# ... (остальной код без изменений) 
 
 # Функция для преобразования Markdown в разметку Telegram
 def markdown_to_telegram(text):
