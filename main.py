@@ -31,7 +31,7 @@ async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         response = await model.generate_content(
-            prompt=query,
+            prompt=query,  # Используем аргумент prompt
             temperature=0.2,
             top_p=0.95,
             top_k=40,
