@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = Bot(BOT_TOKEN)
+bot = Bot(BOT_TOKEN')
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
@@ -43,7 +43,7 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content(query, max_tokens=500)  # Ограничиваем ответ Gemini
+        response = model.generate_content(query)
         raw_response = response.candidates[0].content.parts[0].text
         logger.info(f"Received response from Gemini: {raw_response}")
         formatted_response = markdown_to_telegram(raw_response)
@@ -53,13 +53,19 @@ async def get_gemini_response(query):
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
 
 async def split_message(message):
-    """Разбивает сообщение на части, если оно превышает максимальную длину."""
+    """Разбивает сообщение на части, не превышающие максимальную длину, 
+       стараясь не разбивать слова.
+    """
     parts = []
-    if len(message) > MAX_MESSAGE_LENGTH:
-        for i in range(0, len(message), MAX_MESSAGE_LENGTH):
-            parts.append(message[i:i + MAX_MESSAGE_LENGTH])
-    else:
-        parts.append(message)
+    current_part = ""
+    for word in message.split():
+        if len(current_part) + len(word) + 1 <= MAX_MESSAGE_LENGTH:
+            current_part += word + " "
+        else:
+            parts.append(current_part.strip())
+            current_part = word + " "
+    if current_part:
+        parts.append(current_part.strip())
     return parts
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,9 +83,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        message_parts = await split_message(response)  # Разбиваем ответ на части
+        message_parts = await split_message(response)  # Разбиваем после форматирования
         for part in message_parts:
             await message.reply_text(part, parse_mode='HTML')
+        await message.reply_text("Конец ответа. Что-то ещё? ")
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
