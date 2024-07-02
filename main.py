@@ -32,8 +32,14 @@ async def get_bot_username():
 
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
+    prompt = f"""
+    Ты - помощник, отвечающий на вопросы в Telegram. 
+    Отформатируй ответ в соответствии с синтаксисом Markdown V2 для Telegram.
+    
+    Вопрос: {query}
+    """
     try:
-        response = model.generate_content(query)
+        response = model.generate_content(prompt)
         raw_response = response.candidates[0].content.parts[0].text
         logger.info(f"Received response from Gemini: {raw_response}")
         return raw_response
@@ -57,12 +63,6 @@ async def split_message(message):
         parts.append(current_part.strip())
     return parts
 
-# Функция escape_markdown_v2() закомментирована
-# def escape_markdown_v2(text):
-#     """Экранирует специальные символы Markdown V2 внутри кода."""
-#     text = re.sub(r'([_*\[\]()~`>#+-=|{}.!])', r'\\\1', text)
-#     return text
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     query = message.text.strip()
@@ -78,15 +78,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-
-        # Экранирование спецсимволов закомментировано
-        # response = re.sub(r'```(.*?)```',
-        #                   lambda m: f"```{escape_markdown_v2(m.group(1))}```",
-        #                   response, flags=re.DOTALL)
-        # response = re.sub(r'`(.*?)`',
-        #                   lambda m: f"`{escape_markdown_v2(m.group(1))}`",
-        #                   response)
-
         message_parts = await split_message(response)
         for part in message_parts:
             await message.reply_text(part, parse_mode='MarkdownV2')
