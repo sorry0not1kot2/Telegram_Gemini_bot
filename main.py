@@ -26,7 +26,7 @@ generation_config = {
     "top_p": 0.95,
     "top_k": 64,
     "max_output_tokens": 4096,
-    "response_mime_type": "text/plain",
+    # "response_mime_type": "text/plain",
 }
 
 model = genai.GenerativeModel(model_name='gemini-1.5-flash')
