@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 import google.generativeai as genai
-from telegram import Bot, Update
+from telegram import Bot, Update, ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
 
@@ -20,7 +20,7 @@ bot = Bot(BOT_TOKEN)
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Установка модели Gemini
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel("gemini-1.5-flesh")
 
 async def get_bot_username():
     bot_info = await bot.get_me()
@@ -29,9 +29,15 @@ async def get_bot_username():
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        response = model.generate_content(query)
-        logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
-        return response.candidates[0].content.parts[0].text
+        response = await model.generate_text(
+            text=query,
+            temperature=0.2,  # Adjust for creativity
+            top_p=0.95,  # Adjust for diversity
+            top_k=40,  # Adjust for diversity
+            max_output_tokens=4096,  # Adjust for length
+        )
+        logger.info(f"Received response from Gemini: {response.text}")
+        return response.text
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
@@ -54,7 +60,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = await get_gemini_response(query)
-        await message.reply_text(response)
+        # Отправляем ответ с использованием ParseMode.MARKDOWN
+        await message.reply_text(response, parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
