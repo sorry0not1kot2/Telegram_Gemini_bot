@@ -27,14 +27,19 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 # Максимальная длина сообщения Telegram
 MAX_MESSAGE_LENGTH = 4096
 
-# ... (остальной код без изменений) 
-
 # Функция для преобразования Markdown в разметку Telegram
 def markdown_to_telegram(text):
-    """Преобразует Markdown в разметку Telegram, экранируя HTML."""
+    """Преобразует Markdown в разметку Telegram, экранируя HTML 
+       и обрабатывая вложенные блоки <pre>.
+    """
     text = re.sub(r'__(.*?)__', r'<b>\1</b>', text)
     text = re.sub(r'_(.*?)_', r'<i>\1</i>', text)
-    text = re.sub(r'`(.*?)`', r'<pre>{}</pre>'.format(html.escape(text)), text) # Используем <pre>
+    
+    # Обрабатываем блоки <pre>
+    text = re.sub(r'`(.*?)`', 
+                  lambda match: '<pre>{}</pre>'.format(html.escape(match.group(1)).replace('<pre>', '&lt;pre&gt;').replace('</pre>', '&lt;/pre&gt;')), 
+                  text)
+    
     text = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2">\1</a>', text)
     return text
 
