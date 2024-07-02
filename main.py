@@ -79,11 +79,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = await get_gemini_response(query)
 
         # Экранируем спецсимволы только внутри блоков кода
-        response = re.sub(r'```(.*?)```', 
-                          lambda m: f"```{escape_markdown_v2(m.group(1))}```", 
+        response = re.sub(r'```(.*?)```',
+                          lambda m: f"```{escape_markdown_v2(m.group(1))}```",
                           response, flags=re.DOTALL)
-        response = re.sub(r'`(.*?)`', 
-                          lambda m: f"`{escape_markdown_v2(m.group(1))}`", 
+        response = re.sub(r'`(.*?)`',
+                          lambda m: f"`{escape_markdown_v2(m.group(1))}`",
                           response)
 
         message_parts = await split_message(response)
@@ -93,4 +93,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
-# ... (остальной код без изменений) 
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    bot_username = await get_bot_username()
+    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                  text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} "
+                                       f"или отвечайте на мои сообщения, чтобы получить ответ.")
+
+async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="История сообщений очищена.")
+
+async def main():
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('clear', clear))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_error_handler(error_handler)
+
+    logger.info("Запуск бота...")
+    await application.run_polling(drop_pending_updates=True)
+
+if __name__ == '__main__':
+    asyncio.run(main())
