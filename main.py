@@ -5,7 +5,6 @@ import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
-from dotenv import load_dotenv
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 nest_asyncio.apply()
