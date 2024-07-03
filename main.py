@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 
-# ID группового чата
-GROUP_CHAT_ID = -1002030510187
+# ID групповых чатов
+ALLOWED_GROUP_CHAT_IDS = [-1002030510187, -1002030599999]
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -78,10 +78,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if message is not None and message.text is not None:
         query = message.text.strip()
         bot_username = await get_bot_username()
-
-        if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
-            logger.info(f"Processing reply to bot: {query}")
-        elif f"@{bot_username}" in query:
+        
+        # Проверяем условия:
+        # 1. Сообщение в одном из разрешенных групповых чатов
+        # 2. Обращение к боту по имени или через реплай
+        if message.chat.id in ALLOWED_GROUP_CHAT_IDS and (
+            (
+                message.reply_to_message
+                and message.reply_to_message.from_user.username == bot_username
+            )
+            or f"@{bot_username}" in query
+        ):
             logger.info(f"Processing mention of bot: {query}")
             query = query.replace(f"@{bot_username}", "").strip()
         else:
