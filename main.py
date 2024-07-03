@@ -4,10 +4,9 @@ import os
 import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
+from telegram.constants import ParseMode
 import nest_asyncio
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
-# Импортируем ParseMode из telegram.constants
-from telegram.constants import ParseMode
 
 nest_asyncio.apply()
 
@@ -28,7 +27,6 @@ generation_config = {
     "top_p": 0.95,
     "top_k": 64,
     "max_output_tokens": 4096,
-    # "response_mime_type": "text/markdown",  # Необязательно, Gemini сам определит формат
 }
 
 model = genai.GenerativeModel(model_name='gemini-1.5-flash')
@@ -66,22 +64,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
 
     if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
-        # Если сообщение является ответом на сообщение бота
         logger.info(f"Processing reply to bot: {query}")
     elif f"@{bot_username}" in query:
-        # Если сообщение содержит упоминание бота
         logger.info(f"Processing mention of bot: {query}")
         query = query.replace(f"@{bot_username}", "").strip()
     else:
-        # Игнорируем сообщения, не содержащие упоминание бота или не являющиеся ответом на сообщение бота
         return
 
     try:
         response = await get_gemini_response(query)
-        # Отправляем ответ в формате Markdown
+
+        # Экранируем одиночные '*' вне блоков кода
+        in_code_block = False
+        escaped_response = []
+        for char in response:
+            if char == '`' and escaped_response and escaped_response[-1] == '`':
+                in_code_block = not in_code_block
+                escaped_response.append(char)
+            elif char == '*' and not in_code_block:
+                escaped_response.append('\*')
+            else:
+                escaped_response.append(char)
+        response = ''.join(escaped_response)
+
         await context.bot.send_message(chat_id=update.effective_chat.id,
-                                     text=response,
-                                     parse_mode=ParseMode.MARKDOWN)
+                                        text=response,
+                                        parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
@@ -90,7 +98,8 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
+    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                  text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
 
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="История сообщений очищена.")
