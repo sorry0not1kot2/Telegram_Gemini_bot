@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 
+# ID группового чата
+GROUP_CHAT_ID = -100112233445
+
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
@@ -41,7 +44,6 @@ model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
-
 
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
