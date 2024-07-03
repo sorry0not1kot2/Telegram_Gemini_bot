@@ -25,7 +25,7 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 
 # ID группового чата
-GROUP_CHAT_ID = -100112233445
+GROUP_CHAT_ID = -1002030510187
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
