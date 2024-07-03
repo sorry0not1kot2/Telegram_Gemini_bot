@@ -1,11 +1,11 @@
 import asyncio
 import logging
 import os
-import re
 import google.generativeai as genai
 from telegram import Bot, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, CommandHandler, filters
 import nest_asyncio
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 nest_asyncio.apply()
 
@@ -21,10 +21,15 @@ bot = Bot(BOT_TOKEN)
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Установка модели Gemini
-model = genai.GenerativeModel('gemini-1.5-flash')
+generation_config = {
+    "temperature": 0.5,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 4096,
+    # "response_mime_type": "text/plain",
+}
 
-# Максимальная длина сообщения Telegram
-MAX_MESSAGE_LENGTH = 4096
+model = genai.GenerativeModel(model_name='gemini-1.5-flash')
 
 async def get_bot_username():
     bot_info = await bot.get_me()
@@ -32,36 +37,26 @@ async def get_bot_username():
 
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
-    prompt = f"""
-    Ты - помощник, отвечающий на вопросы в Telegram. 
-    Отформатируй ответ в соответствии с синтаксисом  HTML для Telegram.
-    
-    Вопрос: {query}
-    """
     try:
-        response = model.generate_content(prompt)
-        raw_response = response.candidates[0].content.parts[0].text
-        logger.info(f"Received response from Gemini: {raw_response}")
-        return raw_response
+        response = model.generate_content(
+            query,
+            generation_config=generation_config,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+            }
+        )
+        if response.candidates:
+            logger.info(f"Received response from Gemini: {response.candidates[0].content.parts[0].text}")
+            return response.candidates[0].content.parts[0].text
+        else:
+            logger.error("No candidates received from Gemini")
+            return "Не удалось получить ответ от Gemini."
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
-
-async def split_message(message):
-    """Разбивает сообщение на части, не превышающие максимальную длину,
-       стараясь не разбивать слова.
-    """
-    parts = []
-    current_part = ""
-    for word in message.split():
-        if len(current_part) + len(word) + 1 <= MAX_MESSAGE_LENGTH:
-            current_part += word + " "
-        else:
-            parts.append(current_part.strip())
-            current_part = word + " "
-    if current_part:
-        parts.append(current_part.strip())
-    return parts
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
@@ -69,23 +64,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
 
     if message.reply_to_message and message.reply_to_message.from_user.username == bot_username:
+        # Если сообщение является ответом на сообщение бота
         logger.info(f"Processing reply to bot: {query}")
     elif f"@{bot_username}" in query:
+        # Если сообщение содержит упоминание бота
         logger.info(f"Processing mention of bot: {query}")
         query = query.replace(f"@{bot_username}", "").strip()
     else:
+        # Игнорируем сообщения, не содержащие упоминание бота или не являющиеся ответом на сообщение бота
         return
 
     try:
         response = await get_gemini_response(query)
-
-        # Экранируем символ '-'
-        response = response.replace('-', '\\-')
-
-        message_parts = await split_message(response)
-        for part in message_parts:
-            await message.reply_text(part, parse_mode='MarkdownV2')
-        await message.reply_text("Конец ответа. Что-то ещё? ", parse_mode='MarkdownV2')
+        await message.reply_text(response)
     except Exception as e:
         await message.reply_text(f"Произошла ошибка: {str(e)}")
 
@@ -94,9 +85,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
-    await context.bot.send_message(chat_id=update.effective_chat.id,
-                                  text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} "
-                                       f"или отвечайте на мои сообщения, чтобы получить ответ.")
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
 
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text="История сообщений очищена.")
@@ -110,7 +99,7 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Запуск бота...")
-    await application.run_polling(drop_pending_updates=True)
+    await application.run_polling(drop_pending_updates=True) 
 
 if __name__ == '__main__':
     asyncio.run(main())
