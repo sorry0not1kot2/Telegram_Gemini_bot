@@ -185,12 +185,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ. \n"
-             "<ul>\n"
-             "<li><b>GitHub:</b> Поиск на GitHub по ключевым словам, таким как \"python bot\" или \"discord bot\" (если ты хочешь создать бота для Discord), может привести тебя к проектам с открытым исходным кодом.</li>\n"
-             "<li><b>Stack Overflow:</b> На этом ресурсе можно найти множество примеров кода и решений для различных задач, в том числе для создания ботов.</li>\n"
-             "<li><b>Официальные документации:</b> Библиотеки, которые используются для создания ботов, часто имеют свою документацию с примерами кода. Например, <a href=\"https://discordpy.readthedocs.io/en/stable/\">Discord.py</a> имеет хорошие примеры.</li>\n"
-             "</ul>"
+        text=f"Привет! Я -  бот на основе Gemini-flesh. вызывайте меня по @{bot_username} или делайте реплей на мои сообщения, чтобы я вам ответил. \n"
+             "© @Don_Dron"
     )
 
 
