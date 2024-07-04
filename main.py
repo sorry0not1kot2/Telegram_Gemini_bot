@@ -170,9 +170,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode=ParseMode.MARKDOWN,
                 message_thread_id=message.message_thread_id,
             )
-    else:
-        # ... (остальной код)
-
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
