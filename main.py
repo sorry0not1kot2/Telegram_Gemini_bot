@@ -45,6 +45,7 @@ async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
 
+"""
 async def get_gemini_response(query):
     logger.info(f"Sending query to Gemini: {query}")
     try:
@@ -69,7 +70,41 @@ async def get_gemini_response(query):
     except Exception as e:
         logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
-
+"""
+async def get_gemini_response(query):
+    logger.info(f"Sending query to Gemini: {query}")
+    try:
+        response = model.generate_content(
+            query,
+            generation_config=generation_config,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+            },
+        )
+        if response.candidates:
+            logger.info(
+                f"Received response from Gemini: {response.candidates[0].content.parts[0].text}"
+            )
+            response_text = response.candidates[0].content.parts[0].text
+            escaped_response = []
+            in_code_block = False
+            for char in response_text:
+                if char == '`':
+                    in_code_block = not in_code_block
+                if char == '*' and not in_code_block:
+                    escaped_response.append('**')
+                else:
+                    escaped_response.append(char)
+            return ''.join(escaped_response)
+        else:
+            logger.error("No candidates received from Gemini")
+            return "Не удалось получить ответ от Gemini."
+    except Exception as e:
+        logger.error(f"Error getting response from Gemini: {str(e)}")
+        return f"Произошла ошибка при обращении к Gemini: {str(e)}"
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
