@@ -40,7 +40,7 @@ generation_config = {
 
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-# Системная инструкция для Gemini
+# Системная инструкция для Gemini (теперь без упоминания HTML)
 system_instruction = """Ты -  девочка Ника,так звали греческую богиню. Ты- хороший, грамотный специалист. Много знаешь во всех областях. Пользуется интернет поиском. 
                         Ты- всё обясняешь для человека с нулевыми знаниями. В обяснении опираешься на ссылки материалов из интернета. Используешь легкиц флирт в общении."""
 
@@ -53,7 +53,7 @@ async def get_bot_username():
 async def get_gemini_response(query, history):
     logger.info(f"Sending query to Gemini: {query}")
     try:
-        # Формируем контекст, включая системную инструкцию и историю
+        # Формируем контекст
         context = f"{system_instruction}\n\n" + "\n".join(
             [f"{message['role']}: {message['content']}" for message in history]
         )
@@ -73,37 +73,7 @@ async def get_gemini_response(query, history):
                 f"Received response from Gemini: {response.candidates[0].content.parts[0].text}"
             )
             response_text = response.candidates[0].content.parts[0].text
-
-            # Экранируем специальные символы
-            escaped_response = []
-            in_code_block = False
-            in_docstring = False
-            i = 0
-            while i < len(response_text):
-                char = response_text[i]
-                if (
-                    i < len(response_text) - 2
-                    and response_text[i] == '"'
-                    and response_text[i + 1] == '"'
-                    and response_text[i + 2] == '"'
-                ):
-                    in_docstring = not in_docstring
-                    escaped_response.append(char)  # Добавляем кавычки
-                    i += 3  # Пропускаем две следующие кавычки
-                    continue
-                if char == "`":
-                    in_code_block = not in_code_block
-                if char == "*" and not in_code_block and not in_docstring:
-                    if i < len(response_text) - 1 and response_text[i + 1] == "*":
-                        escaped_response.append("**")  # Добавляем без экранирования
-                        i += 1  # Пропускаем следующую звёздочку
-                    else:
-                        escaped_response.append("\*")  # Экранируем одиночную
-                else:
-                    escaped_response.append(char)
-                i += 1
-
-            return "".join(escaped_response)
+            return response_text  # Возвращаем текст без изменений
         else:
             logger.error("No candidates received from Gemini")
             return "Не удалось получить ответ от Gemini."
@@ -120,7 +90,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         bot_username = await get_bot_username()
         user_id = update.effective_user.id
 
-        # Инициализируем историю для пользователя, если её нет
+        # Инициализируем историю для пользователя
         if user_id not in context.bot_data:
             context.bot_data[user_id] = {"history": []}
 
@@ -133,10 +103,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             or f"@{bot_username}" in query
         ):
-            # Отправляем сообщение "Обрабатываю запрос..."
+            # Отправляем сообщение "думаю..."
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="Обрабатываю запрос...",
+                text="_думаю..._",  # Курсив в Markdown
                 parse_mode=ParseMode.MARKDOWN,
                 message_thread_id=message.message_thread_id,
             )
@@ -153,11 +123,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Добавляем ответ Gemini в историю
                 history.append({"role": "assistant", "content": response})
 
-                # Отправляем ответ в ту же ветку
+                # Отправляем ответ в той же ветке
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=response,
-                    parse_mode=ParseMode.HTML,
+                    parse_mode=ParseMode.MARKDOWN, # Markdown для ответа Gemini
                     message_thread_id=message.message_thread_id,
                 )
             except Exception as e:
@@ -170,6 +140,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode=ParseMode.MARKDOWN,
                 message_thread_id=message.message_thread_id,
             )
+
+
+# ... (остальной код без изменений)
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
