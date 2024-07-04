@@ -82,9 +82,6 @@ async def get_gemini_response(query):
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
 
 
-# Глобальный словарь для отслеживания последнего chat_id
-last_chat_id = {}
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
 
@@ -143,24 +140,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 i += 1
             response = ''.join(escaped_response)
 
-            # Запоминаем chat_id темы, если это обращение к боту
-            user_id = update.effective_user.id
-            last_chat_id[user_id] = update.message.chat_id
-
-            # Отправляем ответ в ту же тему, если chat_id совпадает
-            if user_id in last_chat_id and last_chat_id[user_id] == update.message.chat_id:
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=response,
-                    parse_mode=ParseMode.MARKDOWN,
-                )
-            else:
-                # Если chat_id не совпадает, отвечаем в главную тему (по умолчанию)
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=response,
-                    parse_mode=ParseMode.MARKDOWN,
-                )
+            # Отправляем ответ в ту же ветку
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=response,
+                parse_mode=ParseMode.MARKDOWN,
+                message_thread_id=message.message_thread_id,
+            )
         except Exception as e:
             await message.reply_text(f"Произошла ошибка: {str(e)}")
     else:
@@ -207,6 +193,8 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
 """
 import asyncio
 import logging
