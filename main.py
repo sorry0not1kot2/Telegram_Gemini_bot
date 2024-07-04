@@ -185,7 +185,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Привет! Я -  бот на основе Gemini-flesh. вызывайте меня по @{bot_username} или делайте реплей на мои сообщения, чтобы я вам ответил. \n"
+        text=f"Привет!\n"
+             "Я -  бот на основе Gemini-flesh.\n\n" 
+             "Для общения со мной, называйте меня в сообщении по @{bot_username} или делайте ответ (reply) на мои сообщения, чтобы я вам ответил. \n\n" 
              "© @Don_Dron"
     )
 
