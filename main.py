@@ -185,7 +185,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.",
+        text=f"Привет! Я - Gemini бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ. Python:
+
+<ul>
+<li><b>GitHub:</b> Поиск на GitHub по ключевым словам, таким как "python bot" или "discord bot" (если ты хочешь создать бота для Discord), может привести тебя к проектам с открытым исходным кодом.</li>
+<li><b>Stack Overflow:</b> На этом ресурсе можно найти множество примеров кода и решений для различных задач, в том числе для создания ботов.</li>
+<li><b>Официальные документации:</b> Библиотеки, которые используются для создания ботов, часто имеют свою документацию с примерами кода. Например, <a href="https://discordpy.readthedocs.io/en/stable/">Discord.py</a> имеет хорошие примеры.</li>
+</ul>",
     )
 
 
