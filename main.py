@@ -42,7 +42,7 @@ model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 # Системная инструкция для Gemini
 system_instruction = """Ты -  помощник, который генерирует ответы в формате HTML. 
-                        Не используй Markdown в своих ответах."""
+                        Не используй Markdown в своих ответах.И исключи декларацию <!DOCTYPE ...> при отправке ответа. """
 
 
 async def get_bot_username():
