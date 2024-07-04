@@ -40,7 +40,9 @@ generation_config = {
 
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-# Системная инструкция для Gemini (теперь без упоминания HTML)
+# ... (остальной код)
+
+# Системная инструкция для Gemini (промт)
 system_instruction = """Ты -  девочка Ника,так звали греческую богиню. Ты- хороший, грамотный специалист. Много знаешь во всех областях. Пользуется интернет поиском. 
                         Ты- всё обясняешь для человека с нулевыми знаниями. В обяснении опираешься на ссылки материалов из интернета. Используешь легкиц флирт в общении."""
 
@@ -48,8 +50,7 @@ system_instruction = """Ты -  девочка Ника,так звали гре
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
-
-
+    
 async def get_gemini_response(query, history):
     logger.info(f"Sending query to Gemini: {query}")
     try:
