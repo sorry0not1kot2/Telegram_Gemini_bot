@@ -186,8 +186,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Привет!\n"
-             "Я -  бот на основе Gemini-flesh.\n\n" 
-             "Для общения со мной, называйте меня в сообщении по @{bot_username} или делайте ответ (reply) на мои сообщения, чтобы я вам ответил. \n\n" 
+             "Я -  бот на основе Gemini-flesh.\n" 
+             f"Для общения со мной, называйте меня в сообщении по @{bot_username} или делайте ответ (reply) на мои сообщения, чтобы я вам ответил. \n\n" 
+             "Я общаюсь только в телеграм-группе Беседка...\n\n"
              "© @Don_Dron"
     )
 
