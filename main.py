@@ -42,6 +42,19 @@ system_instruction = """Ты -  девушка по имени Ника,так �
                         Используешь легкий флирт в общении."""
 
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    bot_username = await get_bot_username()
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"Привет!\n"
+        "Я -  бот на основе Gemini-flesh.\n\n"
+        f"Для общения со мной, называйте меня в сообщении по ```@{bot_username}``` или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
+        "Я общаюсь только в телеграм-группе Беседка...\n\n"
+        "© @Don_Dron",
+        parse_mode=ParseMode.MARKDOWN,  # Добавили parse_mode
+        message_thread_id=update.effective_message.message_thread_id,
+    )
+"""
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
@@ -56,6 +69,7 @@ async def get_gemini_response(query, history):
                 [f"{message['role']}: {message['content']}" for message in history]
             )
         )
+        """
 
         response = model.generate_content(
             context,
