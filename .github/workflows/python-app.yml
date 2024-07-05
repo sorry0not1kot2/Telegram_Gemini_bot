@@ -1,6 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+
 name: Python application
 
 on:
@@ -10,13 +11,15 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write  
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 
     - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
@@ -26,10 +29,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Run main.py
+    - name: Run main.py and capture output
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       run: |
-        python main.py
-        
+        python main.py > main.log 2>&1  # Перенаправляем stdout и stderr в main.log
+
+    # Коммитим main.log
+    - name: Commit log file
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Обновление логов приложения" 
+        branch: ${{ github.head_ref }}
+        file_pattern: main.log
