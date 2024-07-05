@@ -53,11 +53,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id,
         text=f"Привет!\n"
         "Я -  бот на основе Gemini-flesh.\n\n"
-        f"Для общения со мной, называйте меня в сообщении по ```@{bot_username}``` или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
+        f"Для общения со мной, называйте меня в сообщении по @{bot_username} или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
         "Я общаюсь только в телеграм-группе Беседка...\n\n"
-        "© @Don_Dron",
-        parse_mode=ParseMode.MARKDOWN,
-        message_thread_id=update.effective_message.message_thread_id,
+        "© @Don_Dron"
     )
 
 
