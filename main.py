@@ -42,6 +42,11 @@ system_instruction = """Ты -  девушка по имени Ника,так �
                         Используешь легкий флирт в общении."""
 
 
+async def get_bot_username():
+    bot_info = await bot.get_me()
+    return bot_info.username
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_username = await get_bot_username()
     await context.bot.send_message(
@@ -54,12 +59,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode=ParseMode.MARKDOWN,  # Добавили parse_mode
         message_thread_id=update.effective_message.message_thread_id,
     )
+    
 """
-async def get_bot_username():
-    bot_info = await bot.get_me()
-    return bot_info.username
-
-
 async def get_gemini_response(query, history):
     try:
         # Формируем контекст
