@@ -139,7 +139,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         #        chat_id=update.effective_chat.id,
         #        text=f"Сорян, я болтаю только когда меня называют по @{bot_username}, и только в телеграм-группе Беседка...",
         #        message_thread_id=message.message_thread_id,
-            )
+        #    )
             
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
