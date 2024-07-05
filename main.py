@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 import google.generativeai as genai
 from telegram import Bot, Update
@@ -16,28 +15,6 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 nest_asyncio.apply()
 
-# --- Настройка логирования ---
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-# Создаем папку для логов, если ее нет
-log_dir = "logs"
-os.makedirs(log_dir, exist_ok=True)
-
-# Формат сообщений логов
-formatter = logging.Formatter(
-    "%(asctime)s - %(levelname)s - %(message)s"
-)
-
-# Создаем обработчик для записи в файл
-file_handler = logging.FileHandler(os.path.join(log_dir, "log.txt"))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(formatter)
-
-# Добавляем обработчик к логгеру
-logger.addHandler(file_handler)
-# --- Конец настройки логирования ---
-
 # Настройка бота
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
@@ -50,7 +27,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Установка модели Gemini
 generation_config = {
-    "temperature": 0.5,
+    "temperature": 0.4,
     "top_p": 0.95,
     "top_k": 64,
     "max_output_tokens": 4096,
@@ -59,8 +36,10 @@ generation_config = {
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
 # Системная инструкция для Gemini (промт)
-system_instruction = """Ты -  девочка Ника,так звали греческую богиню. Ты- хороший, грамотный специалист. Много знаешь во всех областях. Пользуется интернет поиском. 
-                        Ты- всё обясняешь для человека с нулевыми знаниями. В обяснении опираешься на ссылки материалов из интернета. Используешь легкиц флирт в общении."""
+system_instruction = """Ты -  девушка по имени Ника,так звали греческую богиню. Ты - хороший, грамотный специалист по программированию. Много знаешь во всех областях наук и естествознаний. Пользуешься интернет поиском. 
+                        Ты всё обясняешь для человека с нулевыми знаниями. Ты имеешь доступ к страницам интернета. В обяснении опираешься на ссылки материалов из интернета. Если тебе указывают ссылку на интернет страницу - ознакамливаешься
+                        и изучаешь контекст этой страницк и ссылки на ней. 
+                        Используешь легкий флирт в общении."""
 
 
 async def get_bot_username():
@@ -69,7 +48,6 @@ async def get_bot_username():
 
 
 async def get_gemini_response(query, history):
-    logger.info(f"Sending query to Gemini: {query}")
     try:
         # Формируем контекст
         context = (
@@ -90,16 +68,11 @@ async def get_gemini_response(query, history):
             },
         )
         if response.candidates:
-            logger.info(
-                f"Received response from Gemini: {response.candidates[0].content.parts[0].text}"
-            )
             response_text = response.candidates[0].content.parts[0].text
             return response_text  # Возвращаем текст без изменений
         else:
-            logger.error("No candidates received from Gemini")
             return "Не удалось получить ответ от Gemini."
     except Exception as e:
-        logger.error(f"Error getting response from Gemini: {str(e)}")
         return f"Произошла ошибка при обращении к Gemini: {str(e)}"
 
 
@@ -124,7 +97,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             or f"@{bot_username}" in query
         ):
-            # Отправляем сообщение "думаю..."
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text="_думаю..._",  # Курсив в Markdown
@@ -132,19 +104,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 message_thread_id=message.message_thread_id,
             )
 
-            logger.info(f"Processing mention of bot: {query}")
             query = query.replace(f"@{bot_username}", "").strip()
 
             try:
-                # Добавляем вопрос пользователя в историю
                 history.append({"role": "user", "content": query})
 
                 response = await get_gemini_response(query, history)
 
-                # Добавляем ответ Gemini в историю
                 history.append({"role": "assistant", "content": response})
 
-                # Отправляем ответ в той же ветке
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=response,
@@ -156,7 +124,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+    await message.reply_text(f"Произошла ошибка: {str(e)}")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -165,7 +133,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id,
         text=f"Привет!\n"
         "Я -  бот на основе Gemini-flesh.\n\n"
-        f"Для общения со мной, называйте меня в сообщении по @{bot_username} или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
+        f"Для общения со мной, называйте меня в сообщении по ```@{bot_username}``` или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
         "Я общаюсь только в телеграм-группе Беседка...\n\n"
         "© @Don_Dron",
         message_thread_id=update.effective_message.message_thread_id,
@@ -193,7 +161,6 @@ async def main():
     )
     application.add_error_handler(error_handler)
 
-    logger.info("Запуск бота...")
     await application.run_polling(drop_pending_updates=True)
 
 
