@@ -56,11 +56,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Для общения со мной, называйте меня в сообщении по ```@{bot_username}``` или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
         "Я общаюсь только в телеграм-группе Беседка...\n\n"
         "© @Don_Dron",
-        parse_mode=ParseMode.MARKDOWN,  # Добавили parse_mode
+        parse_mode=ParseMode.MARKDOWN,
         message_thread_id=update.effective_message.message_thread_id,
     )
-    
-"""
+
+
 async def get_gemini_response(query, history):
     try:
         # Формируем контекст
@@ -70,7 +70,6 @@ async def get_gemini_response(query, history):
                 [f"{message['role']}: {message['content']}" for message in history]
             )
         )
-        """
 
         response = model.generate_content(
             context,
@@ -141,20 +140,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await message.reply_text(f"Произошла ошибка: {str(e)}")
 
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    bot_username = await get_bot_username()
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"Привет!\n"
-        "Я -  бот на основе Gemini-flesh.\n\n"
-        f"Для общения со мной, называйте меня в сообщении по ```@{bot_username}``` или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
-        "Я общаюсь только в телеграм-группе Беседка...\n\n"
-        "© @Don_Dron",
-        message_thread_id=update.effective_message.message_thread_id,
-    )
-
-
 async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id in context.bot_data:
@@ -164,7 +149,6 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text="История сообщений очищена.",
         message_thread_id=update.effective_message.message_thread_id,
     )
-
 
 async def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
