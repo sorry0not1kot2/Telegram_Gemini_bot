@@ -21,4 +21,4 @@ rad.json
 #Test results file
 TestResults.xml
 # игнор папки "logs" и всё её содержимое
-/logs/
+# /logs/
