@@ -133,12 +133,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             except Exception as e:
                 await message.reply_text(f"Произошла ошибка: {str(e)}")
-        else:
-            # Отправляем сообщение об ошибке
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=f"Сорян, я болтаю только когда меня называют по @{bot_username}, и только в телеграм-группе Беседка...",
-                message_thread_id=message.message_thread_id,
+        #else:
+        #    # Отправляем сообщение об ошибке
+        #    await context.bot.send_message(
+        #        chat_id=update.effective_chat.id,
+        #        text=f"Сорян, я болтаю только когда меня называют по @{bot_username}, и только в телеграм-группе Беседка...",
+        #        message_thread_id=message.message_thread_id,
             )
             
 
@@ -152,7 +152,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id,
         text=f"Привет!\n"
              "Я -  бот на основе Gemini-flesh.\n\n"
-             f"Для общения со мной, называйте меня в сообщении по @{bot_username} или делайте ответ (reply) на мои сообщения, чтобы я вам ответил. \n\n"
+             f"Для общения со мной, называйте меня в сообщении по @{bot_username} или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
              "Я общаюсь только в телеграм-группе Беседка...\n\n"
              "© @Don_Dron",
         message_thread_id=update.effective_message.message_thread_id
