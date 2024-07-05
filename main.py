@@ -13,7 +13,6 @@ from telegram.ext import (
 from telegram.constants import ParseMode
 import nest_asyncio
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
-from logging.handlers import RotatingFileHandler
 
 nest_asyncio.apply()
 
@@ -30,12 +29,8 @@ formatter = logging.Formatter(
     "%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Создаем обработчик для записи в файл с ротацией
-file_handler = RotatingFileHandler(
-    os.path.join(log_dir, "log.txt"),
-    maxBytes=200 * 1024,
-    backupCount=5,
-)
+# Создаем обработчик для записи в файл
+file_handler = logging.FileHandler(os.path.join(log_dir, "log.txt"))
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 
@@ -48,7 +43,7 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 
 # ID групповых чатов
-ALLOWED_GROUP_CHAT_IDS = [-1002030510187, -1002030599999]  # замените на ваши ID
+ALLOWED_GROUP_CHAT_IDS = [-1002030510187, -1002030599999]
 
 # Установка API ключа для Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -158,13 +153,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             except Exception as e:
                 await message.reply_text(f"Произошла ошибка: {str(e)}")
-        # else:
-        #    # Отправляем сообщение об ошибке
-        #    await context.bot.send_message(
-        #        chat_id=update.effective_chat.id,
-        #        text=f"Сорян, я болтаю только когда меня называют по @{bot_username}, и только в телеграм-группе Беседка...",
-        #        message_thread_id=message.message_thread_id,
-        #    )
 
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
