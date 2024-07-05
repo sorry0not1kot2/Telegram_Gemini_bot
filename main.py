@@ -1,5 +1,3 @@
-# рабочий файл с логами в память с условием работы только в телеграм группе, 
-# с прописанным промтом и выставленными настройками для Gemini
 import asyncio
 import logging
 import os
@@ -15,12 +13,35 @@ from telegram.ext import (
 from telegram.constants import ParseMode
 import nest_asyncio
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from logging.handlers import RotatingFileHandler
 
 nest_asyncio.apply()
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
+# --- Настройка логирования ---
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Создаем папку для логов, если ее нет
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+
+# Формат сообщений логов
+formatter = logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(message)s"
+)
+
+# Создаем обработчик для записи в файл с ротацией
+file_handler = RotatingFileHandler(
+    os.path.join(log_dir, "log.txt"),
+    maxBytes=200 * 1024,
+    backupCount=5,
+)
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логгеру
+logger.addHandler(file_handler)
+# --- Конец настройки логирования ---
 
 # Настройка бота
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -42,8 +63,6 @@ generation_config = {
 
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-# ... (остальной код)
-
 # Системная инструкция для Gemini (промт)
 system_instruction = """Ты -  девочка Ника,так звали греческую богиню. Ты- хороший, грамотный специалист. Много знаешь во всех областях. Пользуется интернет поиском. 
                         Ты- всё обясняешь для человека с нулевыми знаниями. В обяснении опираешься на ссылки материалов из интернета. Используешь легкиц флирт в общении."""
@@ -52,13 +71,17 @@ system_instruction = """Ты -  девочка Ника,так звали гре
 async def get_bot_username():
     bot_info = await bot.get_me()
     return bot_info.username
-    
+
+
 async def get_gemini_response(query, history):
     logger.info(f"Sending query to Gemini: {query}")
     try:
         # Формируем контекст
-        context = f"{system_instruction}\n\n" + "\n".join(
-            [f"{message['role']}: {message['content']}" for message in history]
+        context = (
+            f"{system_instruction}\n\n"
+            + "\n".join(
+                [f"{message['role']}: {message['content']}" for message in history]
+            )
         )
 
         response = model.generate_content(
@@ -130,19 +153,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=response,
-                    parse_mode=ParseMode.MARKDOWN, # Markdown для ответа Gemini
+                    parse_mode=ParseMode.MARKDOWN,  # Markdown для ответа Gemini
                     message_thread_id=message.message_thread_id,
                 )
             except Exception as e:
                 await message.reply_text(f"Произошла ошибка: {str(e)}")
-        #else:
+        # else:
         #    # Отправляем сообщение об ошибке
         #    await context.bot.send_message(
         #        chat_id=update.effective_chat.id,
         #        text=f"Сорян, я болтаю только когда меня называют по @{bot_username}, и только в телеграм-группе Беседка...",
         #        message_thread_id=message.message_thread_id,
         #    )
-            
+
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
@@ -153,11 +176,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Привет!\n"
-             "Я -  бот на основе Gemini-flesh.\n\n"
-             f"Для общения со мной, называйте меня в сообщении по @{bot_username} или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
-             "Я общаюсь только в телеграм-группе Беседка...\n\n"
-             "© @Don_Dron",
-        message_thread_id=update.effective_message.message_thread_id
+        "Я -  бот на основе Gemini-flesh.\n\n"
+        f"Для общения со мной, называйте меня в сообщении по @{bot_username} или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
+        "Я общаюсь только в телеграм-группе Беседка...\n\n"
+        "© @Don_Dron",
+        message_thread_id=update.effective_message.message_thread_id,
     )
 
 
@@ -166,9 +189,9 @@ async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id in context.bot_data:
         del context.bot_data[user_id]
     await context.bot.send_message(
-        chat_id=update.effective_chat.id, 
+        chat_id=update.effective_chat.id,
         text="История сообщений очищена.",
-        message_thread_id=update.effective_message.message_thread_id 
+        message_thread_id=update.effective_message.message_thread_id,
     )
 
 
