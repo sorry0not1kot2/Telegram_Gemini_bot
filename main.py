@@ -156,7 +156,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id,
         text=f"Привет!\n"
              "Я -  бот на основе Gemini-flesh.\n\n"
-             f"Для общения со мной, называйте меня в сообщении по `@{bot_username}` или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
+             "Для общения со мной, называйте меня в сообщении \n"
+             f"по @{bot_username} или  сделайте ответ (replay) на мои сообщения, чтобы я вам ответил. \n\n"
+             " команда `/start` - запуск бота"
+             " команда `/clear` - удаление истории сообщений"
              "Я общаюсь только в телеграм-группе Беседка...\n\n"
              "© @Don_Dron",
         message_thread_id=update.effective_message.message_thread_id
